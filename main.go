@@ -12,36 +12,46 @@ func (a Animal) Sleep() {
 }
 
 func (a Animal) Eat() {
-	fmt.Printf("Animal : %v is sleeping. \n",a.Name)
+	fmt.Printf("Animal : %v is eating. \n",a.Name)
 }
 
-type Bird struct {
-	Animal // Embedded Struct - can be used for code reuse
-	Migratory bool
-	Color string
+func (a Animal) Speak() {
+	fmt.Printf("Generic Sound by Animal : %v\n",a.Name)
 }
 
-func (b Bird) Fly() {
-	fmt.Printf("Bird : '%v' with Color : '%v' is flying. \n",b.Name,b.Color)
+type Dog struct {
+	Animal
+}
+
+func (d Dog) Speak() {
+	fmt.Printf("Woof Woof by Dog : %v\n", d.Name)
+}
+
+type Cat struct {
+	Animal
+}
+
+func (c Cat) Speak() {
+	fmt.Printf("Meow Meow by Dog : %v\n", c.Name)
 }
 
 func main() {
 	fmt.Println("Go composition basics.")
 	a := Animal{
-		Name: "Tiger",
+		Name: "Simba",
 		Weight: 2000,
 	}
 	a.Eat()
+	a.Speak()
 	a.Sleep()
-	b := Bird{
+	d := Dog{
 		Animal: Animal{
-			Name: "Crow",
-			Weight: 90,
+			Name: "Tommy",
+			Weight: 100,
 		},
-		Color: "Black",
-		Migratory: false,
 	}
-	b.Fly()
-	b.Eat()
-	b.Sleep()
+	d.Eat()
+	d.Sleep()
+	d.Speak() // This works as a Overloaded method
+	d.Animal.Speak() // But still the Embedded Struct's (Parents) Speak is available
 }
