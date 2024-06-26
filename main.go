@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strconv"
 )
 
 type Author struct {
@@ -34,7 +35,11 @@ func (p Post) String() string {
 	return fmt.Sprintf("POST... Name: %v ----- Country: %v \n",p.Title,p.Content) + p.Author.String()
 }
 
-type Count int32
+type Count int
+
+func (c Count) String() string {
+	return fmt.Sprintf("%v",strconv.Itoa(int(c)))
+}
 
 // Using the fmt.Stringer interface we can create a logger
 func WriteLog(logObject fmt.Stringer){
@@ -57,6 +62,9 @@ func main() {
 		Title: "Save Water",
 		Content:"Water is life. Water is scarce. Save Water.",
 	}
+
+	c := Count(5)
+	WriteLog(c);
 	WriteLog(author);
 	WriteLog(book);
 	WriteLog(post);
