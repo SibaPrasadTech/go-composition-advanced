@@ -1,18 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"log"
-	"strconv"
+	"io"
 )
 
 type Author struct {
 	Name string
 	Country string
-}
-
-func (a Author) String() string {
-	return fmt.Sprintf("AUTHOR... Name: %v ----- Country: %v \n",a.Name,a.Country)
 }
 
 type Book struct {
@@ -21,51 +18,54 @@ type Book struct {
 	Author
 }
 
-func (b Book) String() string {
-	return fmt.Sprintf("BOOK... Name: %v ----- Publishing Year: %v \n",b.Name,b.PublishingYear) + b.Author.String()
+func (b Book) BookJSONWriter(wr io.Writer){
+	WriteJSON(b,wr)
 }
 
 type Post struct {
 	Title string
 	Content string
 	Author
+} 
+
+func (p Post) PostJSONWriter(wr io.Writer){
+	WriteJSON(p,wr)
 }
 
-func (p Post) String() string {
-	return fmt.Sprintf("POST... Name: %v ----- Country: %v \n",p.Title,p.Content) + p.Author.String()
-}
-
-type Count int
-
-func (c Count) String() string {
-	return fmt.Sprintf("%v",strconv.Itoa(int(c)))
-}
-
-// Using the fmt.Stringer interface we can create a logger
-func WriteLog(logObject fmt.Stringer){
-	log.Print(logObject.String());
+func WriteJSON(data interface{}, wr io.Writer) error {
+	js,jerr := json.Marshal(data)
+	if jerr != nil {
+		return jerr
+	}
+	_,werr := wr.Write(js)
+	if(werr) != nil {
+		return werr
+	}
+	return nil
 }
 
 func main() {
-	fmt.Println("Go Interface Use Case.... Create common Logger");
+	fmt.Println("Go Interface Use Case.... Create a common JSON Writer");
 	author := Author{
 		Name: "Siba",
 		Country: "India",
-	}
-	book := Book{
-		Author: author,
-		Name: "Meaning of Life",
-		PublishingYear: 2023,
 	}
 	post := Post{
 		Author: author,
 		Title: "Save Water",
 		Content:"Water is life. Water is scarce. Save Water.",
 	}
-
-	c := Count(5)
-	WriteLog(c);
-	WriteLog(author);
-	WriteLog(book);
-	WriteLog(post);
+	book := Book{
+		Author: author,
+		Name: "Criminal Law",
+		PublishingYear: 2023,
+	}
+	var postBytes bytes.Buffer
+	post.PostJSONWriter(&postBytes)
+	fmt.Println(postBytes)
+	fmt.Printf("%s",&postBytes)
+	var bookBytes bytes.Buffer
+	book.BookJSONWriter(&bookBytes)
+	fmt.Println(bookBytes)
+	fmt.Printf("%s",&bookBytes)
 }
