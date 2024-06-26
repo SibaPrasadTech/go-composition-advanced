@@ -1,68 +1,63 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
-type SpeakingAnimal interface {
-	Speak()
-}
-
-func makeAnimalSpeak(sa SpeakingAnimal) {
-	sa.Speak()
-}
-
-type Animal struct {
+type Author struct {
 	Name string
-	Weight int64
+	Country string
 }
 
-func (a Animal) Sleep() {
-	fmt.Printf("Animal : %v is sleeping. \n",a.Name)
+func (a Author) String() string {
+	return fmt.Sprintf("AUTHOR... Name: %v ----- Country: %v \n",a.Name,a.Country)
 }
 
-func (a Animal) Eat() {
-	fmt.Printf("Animal : %v is eating. \n",a.Name)
+type Book struct {
+	Name string
+	PublishingYear int32
+	Author
 }
 
-func (a Animal) Speak() {
-	fmt.Printf("Generic Sound by Animal : %v\n",a.Name)
+func (b Book) String() string {
+	return fmt.Sprintf("BOOK... Name: %v ----- Publishing Year: %v \n",b.Name,b.PublishingYear) + b.Author.String()
 }
 
-type Dog struct {
-	Animal
+type Post struct {
+	Title string
+	Content string
+	Author
 }
 
-func (d Dog) Speak() {
-	fmt.Printf("Woof Woof by Dog : %v\n", d.Name)
+func (p Post) String() string {
+	return fmt.Sprintf("POST... Name: %v ----- Country: %v \n",p.Title,p.Content) + p.Author.String()
 }
 
-type Cat struct {
-	Animal
-}
+type Count int32
 
-func (c Cat) Speak() {
-	fmt.Printf("Meow Meow by Dog : %v\n", c.Name)
+// Using the fmt.Stringer interface we can create a logger
+func WriteLog(logObject fmt.Stringer){
+	log.Print(logObject.String());
 }
 
 func main() {
-	fmt.Println("Go composition basics.")
-	a := Animal{
-		Name: "Simba",
-		Weight: 2000,
+	fmt.Println("Go Interface Use Case.... Create common Logger");
+	author := Author{
+		Name: "Siba",
+		Country: "India",
 	}
-	a.Eat()
-	a.Sleep()
-	d := Dog{
-		Animal: Animal{
-			Name: "Tommy",
-			Weight: 100,
-		},
+	book := Book{
+		Author: author,
+		Name: "Meaning of Life",
+		PublishingYear: 2023,
 	}
-	d.Eat()
-	d.Sleep()
-
-	//a.Speak()
-	makeAnimalSpeak(a)
-	makeAnimalSpeak(d)
-	// d.Speak() // This works as a Overloaded method
-	// d.Animal.Speak() // But still the Embedded Struct's (Parents) Speak is available
+	post := Post{
+		Author: author,
+		Title: "Save Water",
+		Content:"Water is life. Water is scarce. Save Water.",
+	}
+	WriteLog(author);
+	WriteLog(book);
+	WriteLog(post);
 }
