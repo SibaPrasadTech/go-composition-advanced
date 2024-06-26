@@ -2,6 +2,14 @@ package main
 
 import "fmt"
 
+type SpeakingAnimal interface {
+	Speak()
+}
+
+func makeAnimalSpeak(sa SpeakingAnimal) {
+	sa.Speak()
+}
+
 type Animal struct {
 	Name string
 	Weight int64
@@ -42,7 +50,6 @@ func main() {
 		Weight: 2000,
 	}
 	a.Eat()
-	a.Speak()
 	a.Sleep()
 	d := Dog{
 		Animal: Animal{
@@ -52,6 +59,10 @@ func main() {
 	}
 	d.Eat()
 	d.Sleep()
-	d.Speak() // This works as a Overloaded method
-	d.Animal.Speak() // But still the Embedded Struct's (Parents) Speak is available
+
+	//a.Speak()
+	makeAnimalSpeak(a)
+	makeAnimalSpeak(d)
+	// d.Speak() // This works as a Overloaded method
+	// d.Animal.Speak() // But still the Embedded Struct's (Parents) Speak is available
 }
