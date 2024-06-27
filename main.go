@@ -1,71 +1,70 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
+	"database/sql"
 	"fmt"
-	"io"
+	"log"
+	"time"
+
+	_ "github.com/lib/pq"
 )
 
-type Author struct {
-	Name string
-	Country string
+// Create our own custom ShopModel interface. Notice that it is perfectly
+// fine for an interface to describe multiple methods, and that it should
+// describe input parameter types as well as return value types.
+type ShopModel interface {
+	CountCustomers(time.Time) (int, error)
+	CountSales(time.Time) (int, error)
 }
 
-type Book struct {
-	Name string
-	PublishingYear int32
-	Author
+// The ShopDB type satisfies our new custom ShopModel interface, because it
+// has the two necessary methods -- CountCustomers() and CountSales().
+type ShopDB struct {
+	*sql.DB
 }
 
-func (b Book) BookJSONWriter(wr io.Writer){
-	WriteJSON(b,wr)
+func (sdb *ShopDB) CountCustomers(since time.Time) (int, error) {
+	var count int
+	err := sdb.QueryRow("SELECT count(*) FROM customers WHERE timestamp > $1", since).Scan(&count)
+	return count, err
 }
 
-type Post struct {
-	Title string
-	Content string
-	Author
-} 
-
-func (p Post) PostJSONWriter(wr io.Writer){
-	WriteJSON(p,wr)
-}
-
-func WriteJSON(data interface{}, wr io.Writer) error {
-	js,jerr := json.Marshal(data)
-	if jerr != nil {
-		return jerr
-	}
-	_,werr := wr.Write(js)
-	if(werr) != nil {
-		return werr
-	}
-	return nil
+func (sdb *ShopDB) CountSales(since time.Time) (int, error) {
+	var count int
+	err := sdb.QueryRow("SELECT count(*) FROM sales WHERE timestamp > $1", since).Scan(&count)
+	return count, err
 }
 
 func main() {
-	fmt.Println("Go Interface Use Case.... Create a common JSON Writer");
-	author := Author{
-		Name: "Siba",
-		Country: "India",
+	db, err := sql.Open("postgres", "postgres://user:pass@localhost/db")
+	if err != nil {
+		log.Fatal(err)
 	}
-	post := Post{
-		Author: author,
-		Title: "Save Water",
-		Content:"Water is life. Water is scarce. Save Water.",
+	defer db.Close()
+
+	shopDB := &ShopDB{db}
+	sr, err := calculateSalesRate(shopDB)
+	if err != nil {
+		log.Fatal(err)
 	}
-	book := Book{
-		Author: author,
-		Name: "Criminal Law",
-		PublishingYear: 2023,
+	fmt.Printf(sr) 
+}
+
+// Swap this to use the ShopModel interface type as the parameter, instead of the
+// concrete *ShopDB type.
+func calculateSalesRate(sm ShopModel) (string, error) {
+	since := time.Now().Add(-24 * time.Hour)
+
+	sales, err := sm.CountSales(since)
+	if err != nil {
+		return "", err
 	}
-	var postBytes bytes.Buffer
-	post.PostJSONWriter(&postBytes)
-	fmt.Println(postBytes)
-	fmt.Printf("%s",&postBytes)
-	var bookBytes bytes.Buffer
-	book.BookJSONWriter(&bookBytes)
-	fmt.Println(bookBytes)
-	fmt.Printf("%s",&bookBytes)
+
+	customers, err := sm.CountCustomers(since)
+	if err != nil {
+		return "", err
+	}
+
+	rate := float64(sales) / float64(customers)
+	return fmt.Sprintf("%.2f", rate), nil
 }
